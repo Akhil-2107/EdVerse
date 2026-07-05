@@ -1,0 +1,99 @@
+/* ============================================================
+   EduVerse AI — Forms
+   ============================================================ */
+
+.form-group {
+  display: flex; flex-direction: column; gap: var(--sp-2);
+  margin-bottom: var(--sp-5);
+}
+.form-label {
+  font-size: var(--fs-sm); font-weight: var(--fw-semibold);
+  color: var(--text-secondary);
+}
+.form-input, .form-select, .form-textarea {
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  transition: var(--ease-smooth);
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+}
+.form-input::placeholder { color: var(--text-muted); }
+.form-textarea { resize: vertical; min-height: 120px; }
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.form-error {
+  font-size: var(--fs-xs); color: var(--accent-red);
+  margin-top: var(--sp-1);
+}
+
+/* ── Auth Pages ── */
+.auth-page {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--sp-6);
+}
+.auth-card {
+  width: 100%; max-width: 440px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-xl);
+  padding: var(--sp-10);
+}
+.auth-header {
+  text-align: center; margin-bottom: var(--sp-8);
+}
+.auth-header h1 {
+  font-size: var(--fs-2xl); font-weight: var(--fw-black);
+  margin-bottom: var(--sp-2);
+}
+.auth-header p {
+  font-size: var(--fs-sm); color: var(--text-secondary);
+}
+.auth-footer {
+  text-align: center; margin-top: var(--sp-6);
+  font-size: var(--fs-sm); color: var(--text-muted);
+}
+.auth-footer a {
+  color: var(--accent-primary); font-weight: var(--fw-semibold);
+}
+.auth-footer a:hover { text-decoration: underline; }
+
+.auth-divider {
+  display: flex; align-items: center; gap: var(--sp-4);
+  margin: var(--sp-6) 0;
+  font-size: var(--fs-xs); color: var(--text-muted);
+}
+.auth-divider::before, .auth-divider::after {
+  content: ''; flex: 1; height: 1px;
+  background: var(--border-subtle);
+}
+
+/* ── Preset selection (resume/course) ── */
+.preset-option {
+  padding: var(--sp-4);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer; text-align: left; width: 100%;
+  transition: var(--ease-smooth);
+  margin-bottom: var(--sp-3);
+}
+.preset-option:hover { background: var(--bg-card-hover); border-color: var(--border-medium); }
+.preset-option.active { border-color: var(--accent-primary); background: rgba(99,102,241,0.06); }
+.preset-option-title { font-size: var(--fs-sm); font-weight: var(--fw-bold); margin-bottom: var(--sp-1); }
+.preset-option-desc { font-size: var(--fs-xs); color: var(--text-muted); }

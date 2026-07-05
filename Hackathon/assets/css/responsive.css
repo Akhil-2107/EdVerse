@@ -1,0 +1,89 @@
+/* ============================================================
+   EduVerse AI — Responsive CSS
+   ============================================================ */
+
+/* ── Tablet (≤1024px) ── */
+@media (max-width: 1024px) {
+  :root { --sidebar-width: 220px; }
+
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .stat-cards { grid-template-columns: repeat(2, 1fr); }
+  .welcome-stats { flex-direction: column; gap: var(--sp-4); }
+  .welcome-banner { flex-direction: column; align-items: flex-start; gap: var(--sp-6); }
+
+  .resume-split { grid-template-columns: 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+
+  .section-title { font-size: var(--fs-2xl); }
+}
+
+/* ── Mobile (≤768px) ── */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    z-index: 200;
+  }
+  .sidebar.open { transform: translateX(0); }
+
+  .mobile-sidebar-toggle { display: flex; }
+  .main-content { margin-left: 0; }
+
+  .page-content { padding: var(--sp-5); }
+
+  .topbar { padding: 0 var(--sp-5); }
+  .topbar-search { display: none; }
+  .topbar-title { font-size: var(--fs-base); }
+
+  .grid-3 { grid-template-columns: 1fr; }
+  .grid-4 { grid-template-columns: 1fr; }
+  .stat-cards { grid-template-columns: 1fr 1fr; }
+
+  .section { padding: var(--sp-12) var(--sp-5); }
+  .section-title { font-size: var(--fs-xl); }
+
+  .nav-links-landing { display: none; }
+  .landing-nav { padding: 0 var(--sp-5); }
+
+  .hero-title { font-size: var(--fs-3xl) !important; }
+  .hero-subtitle { font-size: var(--fs-base) !important; }
+  .hero-cta { flex-direction: column; align-items: stretch; }
+  .hero-cta .btn { text-align: center; }
+
+  .hero-orbit-1, .hero-orbit-2 { display: none; }
+
+  .quiz-container { padding: 0; }
+  .chat-container { height: calc(100vh - 200px); }
+
+  .tabs { width: 100%; }
+  .tab-btn { flex: 1; text-align: center; }
+
+  .roadmap-timeline { padding-left: var(--sp-8); }
+
+  .col-span-4, .col-span-6, .col-span-8 { grid-column: span 12; }
+
+  /* Sidebar overlay background */
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 190;
+  }
+  .sidebar-overlay.open { display: block; }
+
+  .nav-hamburger { display: flex; flex-direction: column; }
+}
+
+/* ── Small Mobile (≤480px) ── */
+@media (max-width: 480px) {
+  .stat-cards { grid-template-columns: 1fr; }
+  .modal { border-radius: var(--radius-lg); }
+  .auth-card { padding: var(--sp-6); }
+  .job-footer { flex-direction: column; gap: var(--sp-3); align-items: flex-start; }
+}
+
+/* ── Large Desktop (≥1400px) ── */
+@media (min-width: 1400px) {
+  .page-content { padding: var(--sp-10) var(--sp-12); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Sidebar overlay — hidden by default, shown only when .open on mobile */
+.sidebar-overlay { display: none; }

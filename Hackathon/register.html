@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — EduVerse AI</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<div class="bg-mesh"></div><div class="bg-grid"></div>
+
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px">
+  <div style="width:100%;max-width:460px">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto 16px">🎓</div>
+      <h1 style="font-size:1.5rem;font-weight:800;margin-bottom:8px">Create Your Account</h1>
+      <p style="color:#94a3b8;font-size:13px">Join 12,000+ learners on EduVerse AI</p>
+    </div>
+
+    <!-- Step indicator -->
+    <div style="display:flex;align-items:center;margin-bottom:32px">
+      <div class="step-dot active" id="dot-1">1</div>
+      <div class="step-line" id="line-1"></div>
+      <div class="step-dot" id="dot-2">2</div>
+      <div class="step-line" id="line-2"></div>
+      <div class="step-dot" id="dot-3">3</div>
+    </div>
+
+    <!-- Step 1 -->
+    <div id="step-1" class="card">
+      <div style="font-size:.875rem;font-weight:700;color:#6366f1;margin-bottom:16px">Step 1 of 3 — Personal Info</div>
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input id="r-name" class="form-input" placeholder="Your name" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input id="r-email" class="form-input" placeholder="you@example.com" type="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input id="r-password" class="form-input" placeholder="Min 6 characters" type="password">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="nextStep(2)">Continue →</button>
+      <p style="text-align:center;margin-top:16px;font-size:13px;color:#64748b">Already have an account? <a href="login.html" style="color:#6366f1">Log in</a></p>
+    </div>
+
+    <!-- Step 2 -->
+    <div id="step-2" class="card" style="display:none">
+      <div style="font-size:.875rem;font-weight:700;color:#6366f1;margin-bottom:16px">Step 2 of 3 — Your Role</div>
+      <div style="display:grid;gap:12px;margin-bottom:20px">
+        <div class="preset-option active" id="role-learner" onclick="selectRole('learner')">
+          <div class="preset-option-title">🧑‍💻 Learner</div>
+          <div class="preset-option-desc">I want to learn new skills and land a better job</div>
+        </div>
+        <div class="preset-option" id="role-educator" onclick="selectRole('educator')">
+          <div class="preset-option-title">👩‍🏫 Educator</div>
+          <div class="preset-option-desc">I want to teach and track my students' progress</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-secondary" onclick="nextStep(1)" style="flex:1">← Back</button>
+        <button class="btn btn-primary" onclick="nextStep(3)" style="flex:1">Continue →</button>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div id="step-3" class="card" style="display:none">
+      <div style="font-size:.875rem;font-weight:700;color:#6366f1;margin-bottom:16px">Step 3 of 3 — Learning Goals</div>
+      <div class="form-group">
+        <label class="form-label">Target Job Role</label>
+        <select id="r-job" class="form-select">
+          <option value="j1">Frontend Engineer</option>
+          <option value="j2">Full-Stack Developer</option>
+          <option value="j3">Software Engineer</option>
+          <option value="j4">Backend Engineer</option>
+          <option value="j5">DevOps Engineer</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Daily Learning Goal</label>
+        <select id="r-goal" class="form-select">
+          <option value="30">30 minutes / day (Light)</option>
+          <option value="60" selected>60 minutes / day (Recommended)</option>
+          <option value="90">90 minutes / day (Intensive)</option>
+          <option value="120">2 hours / day (Bootcamp)</option>
+        </select>
+      </div>
+      <div id="reg-error" style="display:none;padding:10px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;font-size:13px;color:#ef4444;margin-bottom:12px"></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-secondary" onclick="nextStep(2)" style="flex:1">← Back</button>
+        <button class="btn btn-primary" onclick="register()" style="flex:1" id="reg-btn">🚀 Create Account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+if (EV.isLoggedIn()) location.href = 'dashboard.html';
+
+let selectedRole = 'learner';
+let currentStep = 1;
+
+function selectRole(role) {
+  selectedRole = role;
+  document.getElementById('role-learner').classList.toggle('active', role === 'learner');
+  document.getElementById('role-educator').classList.toggle('active', role === 'educator');
+}
+
+function nextStep(n) {
+  if (n === 2 && currentStep === 1) {
+    const name = document.getElementById('r-name').value.trim();
+    const email = document.getElementById('r-email').value.trim();
+    const pw = document.getElementById('r-password').value;
+    if (!name || !email || pw.length < 6) { EV.toast('Please fill all fields (min 6 char password)', 'warning'); return; }
+  }
+  document.getElementById('step-' + currentStep).style.display = 'none';
+  document.getElementById('step-' + n).style.display = 'block';
+  for (let i = 1; i <= 3; i++) {
+    const dot = document.getElementById('dot-' + i);
+    dot.classList.toggle('active', i <= n);
+    if (i < 3) document.getElementById('line-' + i)?.classList.toggle('active', i < n);
+  }
+  currentStep = n;
+}
+
+function register() {
+  const btn = document.getElementById('reg-btn');
+  btn.textContent = 'Creating account…'; btn.disabled = true;
+  setTimeout(() => {
+    // Use demo user based on role
+    const userId = selectedRole === 'educator' ? 'u4' : 'u1';
+    EV.setCurrentUser(userId);
+    EV.toast('Account created! Welcome to EduVerse AI 🎉', 'success');
+    setTimeout(() => { location.href = selectedRole === 'educator' ? 'educator.html' : 'dashboard.html'; }, 800);
+  }, 1200);
+}
+</script>
+<style>
+.step-dot{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;transition:all .3s;color:#64748b}
+.step-dot.active{background:linear-gradient(135deg,#6366f1,#8b5cf6);border-color:#6366f1;color:#fff;box-shadow:0 0 16px rgba(99,102,241,.4)}
+.step-line{flex:1;height:2px;background:rgba(255,255,255,.06);transition:all .3s;margin:0 8px}
+.step-line.active{background:linear-gradient(90deg,#6366f1,#8b5cf6)}
+</style>
+</body>
+</html>

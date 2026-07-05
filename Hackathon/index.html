@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduVerse AI — Adaptive Learning Platform</title>
+  <meta name="description" content="AI-powered personalized learning that adapts to you, closes skill gaps, and connects you to your dream job.">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:calc(var(--navbar-height)+60px) 5% 80px;position:relative;overflow:hidden}
+    .hero-bg{position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(99,102,241,.14),transparent 60%),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(139,92,246,.08),transparent 50%)}
+    .hero-content{max-width:840px;position:relative;z-index:1}
+    .hero-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:999px;padding:8px 16px;font-size:12px;font-weight:700;color:#6366f1;margin-bottom:24px;letter-spacing:.04em}
+    .hero-title{font-size:clamp(2rem,6vw,3.5rem);font-weight:800;letter-spacing:-.03em;line-height:1.08;margin-bottom:24px}
+    .hero-subtitle{font-size:1.125rem;color:#94a3b8;max-width:600px;margin:0 auto 40px;line-height:1.7}
+    .hero-cta{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+    .hero-stats{display:flex;gap:32px;justify-content:center;margin-top:64px;padding-top:40px;border-top:1px solid rgba(255,255,255,.06);flex-wrap:wrap}
+    .hero-stat-val{font-size:1.5rem;font-weight:800}.hero-stat-label{font-size:12px;color:#64748b;margin-top:4px}
+    .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+    .feature-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:24px;transition:all .25s;cursor:default}
+    .feature-card:hover{transform:translateY(-4px);border-color:rgba(99,102,241,.3);box-shadow:0 20px 40px rgba(0,0,0,.3),0 0 20px rgba(99,102,241,.15)}
+    .feature-icon{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:16px;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.12)}
+    .feature-card h3{font-size:1rem;font-weight:700;margin-bottom:8px}
+    .feature-card p{font-size:13px;color:#94a3b8;line-height:1.6}
+    .how-steps{max-width:700px;margin:0 auto;position:relative}
+    .how-steps::before{content:'';position:absolute;left:27px;top:28px;bottom:28px;width:2px;background:linear-gradient(to bottom,#6366f1,#8b5cf6,#06b6d4)}
+    .how-step{display:flex;gap:24px;margin-bottom:28px}
+    .how-step-num{width:56px;height:56px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:1.4rem;z-index:1;box-shadow:0 0 20px rgba(99,102,241,.3)}
+    .how-step-body{padding-top:12px}.how-step-body h3{font-size:1.1rem;font-weight:700;margin-bottom:8px}
+    .how-step-body p{font-size:13px;color:#94a3b8;line-height:1.6}
+    .testimonials-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+    .testimonial-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:24px}
+    .testimonial-stars{color:#f59e0b;margin-bottom:16px}
+    .testimonial-text{font-size:13px;color:#94a3b8;line-height:1.7;margin-bottom:20px}
+    .testimonial-author{display:flex;align-items:center;gap:12px}
+    footer{padding:40px 5%;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+  </style>
+</head>
+<body>
+<div class="bg-mesh"></div><div class="bg-grid"></div>
+
+<!-- NAV -->
+<nav class="landing-nav">
+  <div class="nav-logo">
+    <div class="nav-logo-icon">🎓</div>
+    EduVerse <span class="gradient-text" style="margin-left:4px">AI</span>
+  </div>
+  <div class="nav-links-landing">
+    <button class="nav-link-item" onclick="scrollTo('#features')">Features</button>
+    <button class="nav-link-item" onclick="scrollTo('#how')">How It Works</button>
+    <button class="nav-link-item" onclick="scrollTo('#testimonials')">Reviews</button>
+  </div>
+  <div class="nav-cta-group">
+    <a href="login.html" class="btn btn-ghost btn-sm">Log In</a>
+    <a href="register.html" class="btn btn-primary btn-sm">Get Started Free</a>
+  </div>
+</nav>
+
+<main class="landing-page">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-orbit hero-orbit-1"><div class="hero-orbit-dot"></div></div>
+    <div class="hero-orbit hero-orbit-2"><div class="hero-orbit-dot" style="background:#06b6d4;box-shadow:0 0 10px #06b6d4"></div></div>
+    <div class="hero-content">
+      <div class="hero-chip fade-in">✨ &nbsp; AI-Powered Adaptive Learning</div>
+      <h1 class="hero-title fade-in fade-in-delay-1">
+        Learn Smarter.<br>
+        <span class="gradient-text">Grow Faster.</span><br>
+        Land Your Dream Job.
+      </h1>
+      <p class="hero-subtitle fade-in fade-in-delay-2">
+        EduVerse AI builds a personalized learning path just for you — mapping your skills, closing gaps, and matching you to real job opportunities in real-time.
+      </p>
+      <div class="hero-cta fade-in fade-in-delay-3">
+        <a href="register.html" class="btn btn-primary btn-lg">🚀 &nbsp;Start Learning Free</a>
+        <a href="dashboard.html" class="btn btn-secondary btn-lg" id="hero-demo-btn">🎮 &nbsp;Explore Demo</a>
+      </div>
+      <div class="hero-stats fade-in fade-in-delay-4">
+        <div><div class="hero-stat-val gradient-text">12K+</div><div class="hero-stat-label">Active Learners</div></div>
+        <div><div class="hero-stat-val gradient-text">98%</div><div class="hero-stat-label">Satisfaction Rate</div></div>
+        <div><div class="hero-stat-val gradient-text">4.8★</div><div class="hero-stat-label">Avg Rating</div></div>
+        <div><div class="hero-stat-val gradient-text">3×</div><div class="hero-stat-label">Faster Job Ready</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="section-header reveal">
+      <div class="section-tag">✦ Features</div>
+      <h2 class="section-title">Everything You Need to <span class="gradient-text">Succeed</span></h2>
+      <p class="section-subtitle">A complete AI-powered system from skill assessment to job placement.</p>
+    </div>
+    <div class="features-grid" id="features-grid"></div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how">
+    <div class="section-header reveal">
+      <div class="section-tag">✦ Process</div>
+      <h2 class="section-title">How <span class="gradient-text">EduVerse AI</span> Works</h2>
+      <p class="section-subtitle">From Day 1 to Dream Job — guided by AI at every step.</p>
+    </div>
+    <div class="how-steps" id="how-steps"></div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="section" id="testimonials">
+    <div class="section-header reveal">
+      <div class="section-tag">✦ Testimonials</div>
+      <h2 class="section-title">Loved by <span class="gradient-text">Thousands</span></h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card reveal">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"EduVerse AI showed me exactly which skills I was missing for my target role and built a roadmap around that. Landed my Stripe interview in 3 months."</p>
+        <div class="testimonial-author">
+          <div class="avatar">👨‍💻</div>
+          <div><div style="font-size:13px;font-weight:700">Marcus Chen</div><div style="font-size:11px;color:#64748b">Frontend Engineer @ Stripe</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal fade-in-delay-1">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"The AI Tutor is incredible. It's like having a senior dev on call 24/7. The skill graph visualization helped me see my progress in a way no other platform does."</p>
+        <div class="testimonial-author">
+          <div class="avatar">👩‍💻</div>
+          <div><div style="font-size:13px;font-weight:700">Priya Sharma</div><div style="font-size:11px;color:#64748b">Full-Stack Dev @ Vercel</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal fade-in-delay-2">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"As an educator, the at-risk student alerts have transformed how I support my students. I can identify who needs help before they fall behind."</p>
+        <div class="testimonial-author">
+          <div class="avatar">👩‍🏫</div>
+          <div><div style="font-size:13px;font-weight:700">Dr. Emily Watson</div><div style="font-size:11px;color:#64748b">CS Professor & Instructor</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section" style="background:rgba(99,102,241,.04);border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06)">
+    <div style="text-align:center;max-width:600px;margin:0 auto">
+      <div class="section-tag reveal">✦ Get Started</div>
+      <h2 class="section-title reveal">Start Your Journey <span class="gradient-text">Today</span></h2>
+      <p class="section-subtitle reveal" style="margin-bottom:40px">Free forever for learners. No credit card required.</p>
+      <div class="hero-cta reveal">
+        <a href="register.html" class="btn btn-primary btn-lg">🚀 Create Free Account</a>
+        <a href="login.html" class="btn btn-secondary btn-lg">Log In</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="nav-logo-icon" style="width:28px;height:28px;font-size:.9rem">🎓</div>
+    <span style="font-weight:700;font-size:13px">EduVerse AI</span>
+    <span style="color:#64748b;font-size:12px">© 2025 All rights reserved.</span>
+  </div>
+  <div style="display:flex;gap:24px;font-size:12px;color:#64748b">
+    <a href="#">Privacy</a><a href="#">Terms</a><a href="#">Contact</a>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script>
+const features = [
+  {icon:'📊',bg:'rgba(99,102,241,.1)',title:'Adaptive Assessment',desc:'Intelligent quizzes that adjust difficulty in real-time, accurately mapping your skill level.'},
+  {icon:'🤖',bg:'rgba(139,92,246,.1)',title:'AI Tutor',desc:'Chat with your personal AI tutor 24/7 for instant explanations and study recommendations.'},
+  {icon:'🕸️',bg:'rgba(6,182,212,.1)',title:'Visual Skill Graph',desc:'See your knowledge map as an interactive network — understand dependencies and mastery.'},
+  {icon:'🗺️',bg:'rgba(16,185,129,.1)',title:'Personalized Roadmap',desc:'Week-by-week learning roadmap generated from your skills and target job.'},
+  {icon:'🎯',bg:'rgba(245,158,11,.1)',title:'Job Gap Analysis',desc:'Compare your skills against real job requirements and see exactly what to learn.'},
+  {icon:'📄',bg:'rgba(236,72,153,.1)',title:'Resume Analyzer',desc:'AI-powered feedback on keywords, ATS compatibility, and missing skills.'},
+  {icon:'💼',bg:'rgba(239,68,68,.1)',title:'Job Recommendations',desc:'Get matched to real job postings that align with your current skills.'},
+  {icon:'📚',bg:'rgba(99,102,241,.1)',title:'Educator Dashboard',desc:'Instructors get real-time insight into student progress, engagement, and at-risk alerts.'}
+];
+document.getElementById('features-grid').innerHTML = features.map(f=>`
+  <div class="feature-card reveal">
+    <div class="feature-icon" style="background:${f.bg}">${f.icon}</div>
+    <h3>${f.title}</h3>
+    <p>${f.desc}</p>
+  </div>`).join('');
+
+const steps=[
+  {icon:'🎓',title:'Choose Your Course & Target Job',desc:'Pick a learning track and set your target role. EduVerse AI aligns your entire experience around your career goal.'},
+  {icon:'📝',title:'Adaptive Assessment',desc:'Take an intelligent quiz that maps your existing knowledge — no time wasted reviewing what you already know.'},
+  {icon:'🕸️',title:'Generate Your Skill Graph',desc:'Your results are visualized as an interactive skill graph showing mastery levels and knowledge gaps.'},
+  {icon:'🎯',title:'Job Market Gap Analysis',desc:'AI compares your skills against real job requirements and quantifies how close you are to qualifying.'},
+  {icon:'🗺️',title:'Personalized Learning Roadmap',desc:'Receive a week-by-week roadmap prioritizing the skills with highest ROI for your target job.'},
+  {icon:'🔄',title:'Daily Learning Loop',desc:'Short focused lessons, quizzes, and projects with XP rewards and AI Tutor support keep you engaged daily.'},
+  {icon:'💼',title:'Apply with Confidence',desc:'Analyze your resume, earn micro-credentials, and get matched to job openings when you\'re ready.'}
+];
+document.getElementById('how-steps').innerHTML = steps.map(s=>`
+  <div class="how-step reveal">
+    <div class="how-step-num">${s.icon}</div>
+    <div class="how-step-body"><h3>${s.title}</h3><p>${s.desc}</p></div>
+  </div>`).join('');
+
+window.scrollTo = sel => { const el=document.querySelector(sel); if(el) el.scrollIntoView({behavior:'smooth'}); };
+EV.initScrollReveal();
+// If logged in, demo button goes to dashboard
+if (EV.isLoggedIn()) document.getElementById('hero-demo-btn').href='dashboard.html';
+</script>
+</body>
+</html>

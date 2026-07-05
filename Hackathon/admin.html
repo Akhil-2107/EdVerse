@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Admin Panel — EduVerse AI</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<div class="bg-mesh"></div><div class="bg-grid"></div>
+<div class="app-shell">
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+  <aside id="sidebar" class="sidebar"></aside>
+  <div class="main-content">
+    <header id="topbar" class="topbar"></header>
+    <main class="page-content page-enter">
+      <div class="page-header">
+        <h1>🛡️ Admin Panel</h1>
+        <p>Platform-wide analytics, user management, and system health.</p>
+      </div>
+
+      <div class="stat-cards" id="admin-stats"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:24px;margin-bottom:24px" class="responsive-grid-2">
+        <!-- User Table -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">👥 All Users</div>
+            <div class="tabs">
+              <button class="tab-btn active" onclick="filterUsers('all',this)">All</button>
+              <button class="tab-btn" onclick="filterUsers('learner',this)">Learners</button>
+              <button class="tab-btn" onclick="filterUsers('educator',this)">Educators</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto"><table id="user-table" style="width:100%;border-collapse:collapse"></table></div>
+        </div>
+
+        <!-- Health + Actions -->
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">⚡ Platform Health</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              ${[
+                {label:'API Uptime',value:'99.98%',color:'#10b981'},
+                {label:'DB Response',value:'12ms',color:'#10b981'},
+                {label:'AI Tutor',value:'Online',color:'#10b981'},
+                {label:'Storage Used',value:'68%',color:'#f59e0b'},
+                {label:'Active Sessions',value:'234',color:'#06b6d4'}
+              ].map(m=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px">
+                <span style="color:#94a3b8">${m.label}</span>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:6px;height:6px;border-radius:50%;background:${m.color}"></div>
+                  <strong>${m.value}</strong>
+                </div>
+              </div><div class="divider" style="margin:6px 0"></div>`).join('')}
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">🎓 Quick Actions</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <button class="btn btn-secondary btn-block" onclick="EV.toast('📥 Export started…','info')">📥 Export Users CSV</button>
+              <button class="btn btn-secondary btn-block" onclick="EV.toast('📢 Announcement sent!','success')">📢 Broadcast Announcement</button>
+              <button class="btn btn-secondary btn-block" onclick="EV.toast('🔧 Maintenance mode toggled','warning')">🔧 Maintenance Mode</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Growth Chart -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom:20px">📈 Platform Growth (Last 7 Days)</div>
+        <div class="chart-container"><canvas id="growth-chart"></canvas></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script src="app.js"></script>
+<script>
+if (!EV.requireAuth()) throw 0;
+const user = EV.getCurrentUser();
+EV.renderSidebar(user.role);
+EV.renderTopbar('Admin Panel', user);
+
+const learners = EV.users.filter(u=>u.role==='learner');
+const totalXP = learners.reduce((s,u)=>s+(u.xp||0),0);
+const totalLessons = learners.reduce((s,u)=>s+(u.completedLessons?.length||0),0);
+
+// Stats
+document.getElementById('admin-stats').innerHTML=[
+  {icon:'👥',label:'Total Users',value:EV.users.length,change:'Platform-wide'},
+  {icon:'🎓',label:'Active Learners',value:learners.length,change:'+2 this week'},
+  {icon:'⚡',label:'Total XP Earned',value:totalXP,change:'All-time'},
+  {icon:'📚',label:'Lessons Completed',value:totalLessons,change:'This month'}
+].map(s=>`<div class="card stat-card card-accent card-glow">
+  <div class="stat-icon">${s.icon}</div>
+  <div>
+    <div class="stat-value" data-target="${s.value}">${s.value}</div>
+    <div class="stat-label">${s.label}</div>
+    <div class="stat-change up">${s.change}</div>
+  </div>
+</div>`).join('');
+document.querySelectorAll('.stat-value[data-target]').forEach(el=>EV.animateCount(el,0,parseInt(el.dataset.target),1200));
+
+let activeFilter = 'all';
+function filterUsers(role, btn) {
+  activeFilter = role;
+  document.querySelectorAll('.tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderUserTable();
+}
+function renderUserTable() {
+  const ROLE_BADGE = {learner:'badge-primary',educator:'badge-cyan',admin:'badge-orange'};
+  const filtered = activeFilter==='all'?EV.users:EV.users.filter(u=>u.role===activeFilter);
+  document.getElementById('user-table').innerHTML = `
+    <thead><tr style="border-bottom:1px solid rgba(255,255,255,.06)">
+      ${['User','Role','XP','Streak','Joined','Actions'].map(h=>`<th style="text-align:left;padding:8px 12px;font-size:11px;color:#64748b;text-transform:uppercase;font-weight:700">${h}</th>`).join('')}
+    </tr></thead>
+    <tbody>${filtered.map(u=>`<tr style="border-bottom:1px solid rgba(255,255,255,.04)">
+      <td style="padding:10px 12px"><div style="display:flex;align-items:center;gap:10px">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center">${u.avatar||'🧑'}</div>
+        <div><div style="font-size:13px;font-weight:600">${u.name}</div><div style="font-size:11px;color:#64748b">${u.email}</div></div>
+      </div></td>
+      <td style="padding:10px 12px"><span class="badge ${ROLE_BADGE[u.role]||'badge-purple'}">${u.role}</span></td>
+      <td style="padding:10px 12px;font-size:13px;font-weight:700">${(u.xp||0).toLocaleString()}</td>
+      <td style="padding:10px 12px;font-size:13px">${u.streak?'🔥 '+u.streak+'d':'—'}</td>
+      <td style="padding:10px 12px;font-size:12px;color:#64748b">${u.joinedDate||'—'}</td>
+      <td style="padding:10px 12px"><div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="EV.toast('Viewing ${u.name}','info')">👁</button>
+        <button class="btn btn-danger btn-sm" onclick="if(confirm('Remove ${u.name}?'))EV.toast('User removed','warning')">🗑</button>
+      </div></td>
+    </tr>`).join('')}</tbody>`;
+}
+renderUserTable();
+
+EV.drawLineChart('growth-chart',['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],[
+  {label:'New Users',data:[2,5,3,8,6,4,7],color:'#6366f1'},
+  {label:'Active Users',data:[12,18,15,22,20,16,24],color:'#06b6d4'},
+  {label:'Lessons Done',data:[28,42,35,55,48,38,62],color:'#10b981'}
+],{height:220});
+</script>
+<style>@media(max-width:900px){.responsive-grid-2{grid-template-columns:1fr!important}}</style>
+</body>
+</html>

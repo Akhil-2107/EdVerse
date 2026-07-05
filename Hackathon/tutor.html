@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AI Tutor — EduVerse AI</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<div class="bg-mesh"></div><div class="bg-grid"></div>
+<div class="app-shell">
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+  <aside id="sidebar" class="sidebar"></aside>
+  <div class="main-content">
+    <header id="topbar" class="topbar"></header>
+    <main class="page-content page-enter">
+      <div class="page-header">
+        <h1>🤖 AI Tutor</h1>
+        <p>Your personal AI learning assistant, available 24/7.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 280px;gap:24px" class="responsive-grid-2">
+
+        <!-- Chat Window -->
+        <div class="card" style="padding:0;display:flex;flex-direction:column;overflow:hidden">
+          <!-- Chat Header -->
+          <div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:12px">
+            <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:1.3rem">🤖</div>
+            <div>
+              <div style="font-weight:700;font-size:14px">EduVerse AI Tutor</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#10b981">
+                <div style="width:6px;height:6px;border-radius:50%;background:#10b981"></div> Online
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="clearChat()">Clear Chat</button>
+          </div>
+
+          <!-- Messages -->
+          <div class="chat-messages" id="chat-messages"></div>
+
+          <!-- Suggestions -->
+          <div class="chat-suggestions" id="suggestions"></div>
+
+          <!-- Input -->
+          <div class="chat-input-bar">
+            <input type="text" class="chat-input" id="chat-input" placeholder="Ask anything about coding or your progress…" onkeydown="if(event.key==='Enter')sendMessage()">
+            <button class="btn btn-primary" onclick="sendMessage()">Send ↑</button>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">📊 Session Stats</div>
+            <div id="session-stats" style="display:flex;flex-direction:column;gap:12px;font-size:13px"></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px">📚 Learning Tips</div>
+            <ul style="display:flex;flex-direction:column;gap:10px;font-size:12px;color:#94a3b8">
+              <li style="display:flex;gap:8px"><span>💡</span><span>Ask me to explain a concept, then quiz yourself immediately after</span></li>
+              <li style="display:flex;gap:8px"><span>🔄</span><span>Review topics you got wrong in the assessment quiz</span></li>
+              <li style="display:flex;gap:8px"><span>🎯</span><span>Focus on your weakest skill first for maximum job readiness impact</span></li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px">🏅 XP from Tutor</div>
+            <div style="text-align:center;padding:16px">
+              <div id="tutor-xp" style="font-size:2rem;font-weight:800;color:#8b5cf6">0</div>
+              <div style="font-size:12px;color:#64748b">XP earned this session</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="app.js"></script>
+<script>
+if (!EV.requireAuth()) throw 0;
+const user = EV.getCurrentUser();
+EV.renderSidebar(user.role);
+EV.renderTopbar('AI Tutor', user);
+
+let msgCount = 0, topicsAsked = new Set(), sessionXP = 0;
+
+function addBubble(content, role) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'chat-bubble ' + (role === 'user' ? 'bubble-user' : 'bubble-ai');
+  div.innerHTML = role === 'ai' ? '<p>' + EV.renderMarkdown(content) + '</p>' : content;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTyping() {
+  const container = document.getElementById('chat-messages');
+  const typing = document.createElement('div');
+  typing.className = 'chat-bubble bubble-ai';
+  typing.id = 'typing-indicator';
+  typing.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+  container.appendChild(typing);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  document.getElementById('typing-indicator')?.remove();
+}
+
+function sendMessage(text) {
+  const input = document.getElementById('chat-input');
+  const msg = (text || input.value).trim();
+  if (!msg) return;
+  input.value = '';
+  addBubble(msg, 'user');
+  msgCount++;
+  showTyping();
+
+  const lower = msg.toLowerCase();
+  let response = EV.tutorResponses.topics.default;
+  if (lower.includes('closure')) { response = EV.tutorResponses.topics.closures; topicsAsked.add('Closures'); }
+  else if (lower.includes('promise') || lower.includes('async')) { response = EV.tutorResponses.topics.promises; topicsAsked.add('Async/Await'); }
+  else if (lower.includes('react') || lower.includes('hook')) { response = EV.tutorResponses.topics.react; topicsAsked.add('React Hooks'); }
+  else if (lower.includes('progress') || lower.includes('skill') || lower.includes('analyz')) { response = EV.tutorResponses.topics.progress; }
+  else if (lower.includes('system design') || lower.includes('architecture')) { response = EV.tutorResponses.topics.default; }
+
+  sessionXP += 15;
+  document.getElementById('tutor-xp').textContent = sessionXP;
+
+  setTimeout(() => {
+    removeTyping();
+    addBubble(response, 'ai');
+    updateStats();
+    document.getElementById('suggestions').innerHTML = EV.tutorResponses.suggestions.slice(0,4).map(s =>
+      `<button class="chat-suggest-btn" onclick="sendMessage('${s}')">${s}</button>`).join('');
+  }, 1200 + Math.random() * 800);
+}
+
+function clearChat() {
+  document.getElementById('chat-messages').innerHTML = '';
+  msgCount = 0; topicsAsked = new Set(); sessionXP = 0;
+  document.getElementById('tutor-xp').textContent = 0;
+  init();
+}
+
+function updateStats() {
+  document.getElementById('session-stats').innerHTML = `
+    <div style="display:flex;justify-content:space-between"><span style="color:#94a3b8">Messages sent</span><strong>${msgCount}</strong></div>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between"><span style="color:#94a3b8">Topics explored</span><strong>${topicsAsked.size}</strong></div>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between"><span style="color:#94a3b8">XP earned</span><strong style="color:#8b5cf6">⚡ ${sessionXP}</strong></div>
+    ${topicsAsked.size ? `<div><div style="font-size:11px;color:#64748b;margin-bottom:6px">TOPICS COVERED</div><div style="display:flex;flex-wrap:wrap;gap:5px">${[...topicsAsked].map(t=>`<span class="badge badge-primary">${t}</span>`).join('')}</div></div>` : ''}`;
+}
+
+function init() {
+  setTimeout(() => addBubble(EV.tutorResponses.greeting, 'ai'), 400);
+  document.getElementById('suggestions').innerHTML = EV.tutorResponses.suggestions.map(s =>
+    `<button class="chat-suggest-btn" onclick="sendMessage('${s}')">${s}</button>`).join('');
+  updateStats();
+}
+init();
+</script>
+<style>@media(max-width:900px){.responsive-grid-2{grid-template-columns:1fr!important}}</style>
+</body>
+</html>

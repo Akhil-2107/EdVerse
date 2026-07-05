@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Roadmap — EduVerse AI</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<div class="bg-mesh"></div><div class="bg-grid"></div>
+<div class="app-shell">
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+  <aside id="sidebar" class="sidebar"></aside>
+  <div class="main-content">
+    <header id="topbar" class="topbar"></header>
+    <main class="page-content page-enter">
+      <div class="page-header">
+        <h1>🗺️ Personalized Roadmap</h1>
+        <p>Your week-by-week path from current skills to dream job.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:24px" class="responsive-grid-2">
+
+        <!-- Timeline -->
+        <div>
+          <!-- Gap Analysis Card -->
+          <div class="card" style="margin-bottom:24px">
+            <div class="card-title" style="margin-bottom:20px">🎯 Job Gap Analysis</div>
+            <div id="gap-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px"></div>
+          </div>
+
+          <!-- Roadmap Phases -->
+          <div class="card">
+            <div class="card-title" style="margin-bottom:24px">📍 Learning Path</div>
+            <div class="roadmap-timeline" id="roadmap-phases"></div>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div class="card" style="text-align:center">
+            <div class="card-title" style="margin-bottom:20px">📊 Overall Progress</div>
+            <canvas id="progress-donut"></canvas>
+            <div id="completion-text" style="margin-top:12px;font-size:13px;color:#94a3b8"></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">⏱ Estimates</div>
+            <div id="estimates"></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">🎯 Target Job</div>
+            <div id="target-job-card"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="app.js"></script>
+<script>
+if (!EV.requireAuth()) throw 0;
+const user = EV.getCurrentUser();
+EV.renderSidebar(user.role);
+EV.renderTopbar('My Roadmap', user);
+
+const job = EV.jobs.find(j => j.id === user.targetJob) || EV.jobs[0];
+const roadmap = EV.roadmapTemplates[user.targetJob] || EV.roadmapTemplates.j1;
+
+// Gap Analysis
+document.getElementById('gap-grid').innerHTML = job.matchSkills.map(sk => {
+  const cur = user.skills[sk] || 0;
+  const target = 80;
+  const color = EV.skillColor(cur);
+  const gap = Math.max(0, target - cur);
+  return `<div class="card" style="background:rgba(255,255,255,.03);padding:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-size:12px;font-weight:700">${EV.SKILL_LABELS[sk]||sk}</span>
+      ${gap===0?'<span class="badge badge-green">✓ Ready</span>':'<span style="font-size:11px;color:#ef4444">+'+gap+'% needed</span>'}
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${cur}%;background:${color}"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:#64748b">
+      <span>${cur}%</span><span>${target}%</span>
+    </div>
+  </div>`;
+}).join('');
+
+// Roadmap phases
+const STATUS_ICONS = {completed:'✅', active:'⚡', locked:'🔒'};
+const STATUS_COLORS = {completed:'var(--accent-green)', active:'var(--accent-primary)', locked:'var(--text-muted)'};
+document.getElementById('roadmap-phases').innerHTML = roadmap.phases.map(phase => `
+  <div class="roadmap-phase">
+    <div class="roadmap-dot ${phase.status}"></div>
+    <div class="roadmap-card-inner" style="border-left:${phase.status==='active'?'3px solid #6366f1':''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div class="roadmap-phase-title">${STATUS_ICONS[phase.status]} ${phase.title}</div>
+        <span style="font-size:11px;color:#64748b;background:rgba(255,255,255,.04);padding:3px 8px;border-radius:999px">Weeks ${phase.weeks}</span>
+      </div>
+      <div class="roadmap-phase-desc">${phase.description}</div>
+      ${phase.skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px">${phase.skills.map(s=>`<span class="badge badge-primary">${EV.SKILL_LABELS[s]||s}</span>`).join('')}</div>` : ''}
+      ${phase.status==='active'?`<button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="location.href='assessment.html'">Continue Learning →</button>`:''}
+    </div>
+  </div>`).join('');
+
+// Donut
+const completed = roadmap.phases.filter(p=>p.status==='completed').length;
+const total = roadmap.phases.length;
+const pct = Math.round((completed/total)*100);
+EV.drawDonutChart('progress-donut', [
+  {value:completed, color:'#6366f1'},
+  {value:total-completed, color:'rgba(255,255,255,0.06)'}
+], {size:140, centerText:pct+'%', centerLabel:'Complete', centerFontSize:22});
+document.getElementById('completion-text').textContent = `${completed} of ${total} phases complete`;
+
+// Estimates
+const weeksLeft = roadmap.phases.filter(p=>p.status!=='completed').reduce((_,p)=>{
+  const m = p.weeks.match(/(\d+)–(\d+)/); return _ + (m ? parseInt(m[2])-parseInt(m[1]) : 4);
+}, 0);
+document.getElementById('estimates').innerHTML = `
+  <div style="display:flex;flex-direction:column;gap:12px;font-size:13px">
+    <div style="display:flex;justify-content:space-between"><span style="color:#94a3b8">Weeks remaining</span><strong>~${weeksLeft} weeks</strong></div>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between"><span style="color:#94a3b8">Daily goal</span><strong>${user.dailyGoal||60} min/day</strong></div>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between"><span style="color:#94a3b8">Completion</span><strong>${pct}%</strong></div>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between"><span style="color:#94a3b8">Job readiness</span><strong style="color:#10b981">${EV.calcJobReadiness(user.skills, job.id)}%</strong></div>
+  </div>`;
+
+// Target job card
+document.getElementById('target-job-card').innerHTML = `
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <div style="font-size:2rem">${job.logo}</div>
+    <div><div style="font-weight:700">${job.title}</div><div style="font-size:12px;color:#64748b">${job.company}</div></div>
+  </div>
+  <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">${job.location}</div>
+  <div style="font-size:13px;font-weight:700;color:#10b981;margin-bottom:16px">${job.salary}</div>
+  <a href="jobs.html" class="btn btn-secondary btn-sm btn-block">View Job Matches</a>`;
+</script>
+<style>@media(max-width:900px){.responsive-grid-2{grid-template-columns:1fr!important}}</style>
+</body>
+</html>

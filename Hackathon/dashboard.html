@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — EduVerse AI</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<div class="bg-mesh"></div><div class="bg-grid"></div>
+<div class="app-shell">
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+  <aside id="sidebar" class="sidebar"></aside>
+  <div class="main-content">
+    <header id="topbar" class="topbar"></header>
+    <main class="page-content page-enter">
+
+      <!-- Welcome Banner -->
+      <div class="welcome-banner" id="welcome-banner"></div>
+
+      <!-- Stat Cards -->
+      <div class="stat-cards" id="stat-cards"></div>
+
+      <!-- Main Grid -->
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:24px;margin-bottom:24px" class="responsive-grid-2">
+
+        <!-- Weekly Activity Chart -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📈 Weekly Activity</div>
+            <div class="tabs">
+              <button class="tab-btn active" onclick="switchChart('minutes',this)">Time</button>
+              <button class="tab-btn" onclick="switchChart('xp',this)">XP</button>
+              <button class="tab-btn" onclick="switchChart('lessons',this)">Lessons</button>
+            </div>
+          </div>
+          <div class="chart-container"><canvas id="activity-chart"></canvas></div>
+        </div>
+
+        <!-- Job Readiness Gauge -->
+        <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+          <div class="card-title">🎯 Job Readiness</div>
+          <div class="gauge-widget">
+            <svg class="gauge-svg" viewBox="0 0 160 160">
+              <defs><linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#8b5cf6"/>
+              </linearGradient></defs>
+              <circle class="gauge-track" cx="80" cy="80" r="60"/>
+              <circle class="gauge-fill-ring" id="gauge-ring" cx="80" cy="80" r="60"/>
+              <text class="gauge-center-text" x="80" y="75" text-anchor="middle" id="gauge-pct">0%</text>
+              <text class="gauge-center-label" x="80" y="95" text-anchor="middle">Ready</text>
+            </svg>
+          </div>
+          <div id="target-job-name" style="font-size:12px;color:#64748b;text-align:center"></div>
+          <a href="roadmap.html" class="btn btn-secondary btn-sm">View Roadmap →</a>
+        </div>
+      </div>
+
+      <!-- Bottom Grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 320px;gap:24px" class="responsive-grid-3">
+
+        <!-- Skill Radar -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:20px">🕸️ Skill Radar</div>
+          <div style="display:flex;justify-content:center"><canvas id="radar-chart"></canvas></div>
+        </div>
+
+        <!-- Leaderboard + Activity -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">🏆 Leaderboard</div>
+          <div id="leaderboard-list"></div>
+        </div>
+
+        <!-- Sidebar: Next Lesson + Badges -->
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px">📚 Continue Learning</div>
+            <div id="next-lesson-card"></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">🏅 Badges</div>
+            <div id="badges-grid" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px">⚡ Recent Activity</div>
+            <div id="activity-feed"></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script src="app.js"></script>
+<script>
+if (!EV.requireAuth()) throw 0;
+const user = EV.getCurrentUser();
+EV.renderSidebar(user.role);
+EV.renderTopbar('Dashboard', user);
+
+// Welcome Banner
+const lp = EV.getLevelProgress(user.xp);
+const readiness = EV.calcJobReadiness(user.skills, user.targetJob);
+const job = EV.jobs.find(j => j.id === user.targetJob);
+const hour = new Date().getHours();
+const greet = hour < 12 ? '🌅 Good morning' : hour < 17 ? '☀️ Good afternoon' : '🌙 Good evening';
+document.getElementById('welcome-banner').innerHTML = `
+  <div class="welcome-info">
+    <h2>${greet}, ${user.name.split(' ')[0]}! ${user.avatar}</h2>
+    <p>Level ${lp.level} · ${user.xp.toLocaleString()} XP · Keep going, you're doing great!</p>
+  </div>
+  <div class="welcome-stats">
+    <div class="streak-pill">🔥 ${user.streak}-day streak</div>
+    <div class="xp-block">
+      <div class="xp-block-label"><span>Level ${lp.level}</span><span>${user.xp} / ${lp.next} XP</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${lp.progress}%"></div></div>
+      <div style="font-size:11px;color:#64748b">${lp.progress}% to Level ${lp.level+1}</div>
+    </div>
+  </div>`;
+
+// Stat Cards
+document.getElementById('stat-cards').innerHTML = [
+  {icon:'⚡',label:'Total XP',value:user.xp,suffix:'',change:'+320 this week',up:true},
+  {icon:'📚',label:'Lessons Done',value:user.completedLessons.length,suffix:'',change:'Keep it up!',up:true},
+  {icon:'🎯',label:'Job Readiness',value:readiness,suffix:'%',change:job?.title||'',up:true},
+  {icon:'🔥',label:'Day Streak',value:user.streak,suffix:'d',change:'Personal best!',up:true}
+].map(s=>`<div class="card stat-card card-accent card-glow">
+  <div class="stat-icon">${s.icon}</div>
+  <div>
+    <div class="stat-value" data-target="${s.value}" data-suffix="${s.suffix}">0</div>
+    <div class="stat-label">${s.label}</div>
+    <div class="stat-change ${s.up?'up':'down'}">${s.change}</div>
+  </div>
+</div>`).join('');
+document.querySelectorAll('.stat-value[data-target]').forEach(el => {
+  EV.animateCount(el, 0, parseInt(el.dataset.target), 1200, el.dataset.suffix);
+});
+
+// Charts
+const wp = EV.weeklyProgress[user.id] || EV.weeklyProgress.u1;
+function switchChart(key, btn) {
+  document.querySelectorAll('.tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const map = { minutes: {label:'Minutes', data:wp.minutes, color:'#6366f1'},
+    xp: {label:'XP', data:wp.xpGained, color:'#8b5cf6'},
+    lessons: {label:'Lessons', data:wp.lessonsCompleted, color:'#06b6d4'} };
+  const d = map[key];
+  EV.drawLineChart('activity-chart', wp.labels, [{label:d.label, data:d.data, color:d.color}], {height:180});
+}
+EV.drawLineChart('activity-chart', wp.labels, [{label:'Minutes',data:wp.minutes,color:'#6366f1'}], {height:180});
+
+// Radar
+const skillKeys = Object.keys(user.skills).slice(0,8);
+const skillVals = skillKeys.map(k => user.skills[k]);
+const jobSkills = job ? job.matchSkills.slice(0,8).map(k => 85) : skillVals.map(()=>85);
+EV.drawRadarChart('radar-chart', skillKeys.map(k=>EV.SKILL_LABELS[k]||k), [
+  {label:'You', data:skillVals, color:'#6366f1'},
+  {label:'Target', data:jobSkills.slice(0,skillKeys.length), color:'#06b6d440'}
+], {size:200});
+
+// Gauge
+setTimeout(() => {
+  const circumference = 2 * Math.PI * 60;
+  const offset = circumference - (readiness / 100) * circumference;
+  const ring = document.getElementById('gauge-ring');
+  if (ring) { ring.style.strokeDasharray = circumference; ring.style.strokeDashoffset = offset; }
+  document.getElementById('gauge-pct').textContent = readiness + '%';
+  document.getElementById('target-job-name').textContent = 'Target: ' + (job?.title || 'Not set');
+}, 300);
+
+// Leaderboard
+document.getElementById('leaderboard-list').innerHTML = EV.leaderboard.map((entry, i) => {
+  const u = EV.users.find(x => x.id === entry.userId);
+  const medals = ['🥇','🥈','🥉'];
+  const isMe = entry.userId === user.id;
+  return `<div class="leaderboard-item" style="${isMe?'background:rgba(99,102,241,.06);border-radius:8px;':''}">
+    <span style="font-size:1.2rem;width:28px;text-align:center">${medals[i]||i+1}</span>
+    <div class="avatar avatar-sm">${u?.avatar||'🧑'}</div>
+    <div class="leaderboard-info">
+      <div class="leaderboard-name">${u?.name||'User'}${isMe?' <span class="badge badge-primary">You</span>':''}</div>
+      <div class="leaderboard-xp">⚡ ${entry.xp.toLocaleString()} XP · 🔥 ${entry.streak}d</div>
+    </div>
+  </div>`;
+}).join('');
+
+// Next Lesson
+const allLessonIds = ['l1','l2','l3','l4','l5','l6','l7','l8','l9','l10'];
+const nextId = allLessonIds.find(id => !user.completedLessons.includes(id));
+const lessonNames = {l1:'Semantic HTML5',l2:'CSS Flexbox & Grid',l3:'Responsive Design',l4:'JS Closures & Scope',l5:'Async JavaScript',l6:'ES6+ Features',l7:'React Component Patterns',l8:'State Management',l9:'React Router',l10:'Node.js Basics'};
+const lessonSkills = {l1:'html',l2:'css',l3:'css',l4:'javascript',l5:'javascript',l6:'javascript',l7:'react',l8:'react',l9:'react',l10:'nodejs'};
+document.getElementById('next-lesson-card').innerHTML = nextId ? `
+  <div class="lesson-card" onclick="location.href='assessment.html'">
+    <div class="lesson-left">
+      <div class="lesson-title">${lessonNames[nextId]||'Next Lesson'}</div>
+      <div class="lesson-meta"><span class="badge badge-primary">${EV.SKILL_LABELS[lessonSkills[nextId]]||'Skill'}</span><span>📖 20 min</span></div>
+    </div>
+    <span style="color:#6366f1;font-size:1.2rem">▶</span>
+  </div>
+  <div style="margin-top:12px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;margin-bottom:6px">
+      <span>Today's Goal</span><span>${user.dailyProgress}/${user.dailyGoal} min</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${Math.round((user.dailyProgress/user.dailyGoal)*100)}%"></div></div>
+  </div>` : `<div class="empty-state"><div class="empty-state-icon">🎉</div><div class="empty-state-title">All caught up!</div></div>`;
+
+// Badges
+const userBadges = EV.badges.filter(b => user.badges?.includes(b.id));
+document.getElementById('badges-grid').innerHTML = userBadges.map(b=>
+  `<div class="tooltip" data-tooltip="${b.name}" style="width:40px;height:40px;border-radius:10px;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.15);display:flex;align-items:center;justify-content:center;font-size:1.3rem;cursor:default">${b.icon}</div>`
+).join('');
+
+// Activity Feed
+document.getElementById('activity-feed').innerHTML = EV.activityFeed.slice(0,5).map(a=>{
+  const u = EV.users.find(x=>x.id===a.userId);
+  return `<div class="activity-item">
+    <div class="activity-icon">${a.icon}</div>
+    <div class="activity-text"><strong>${u?.name.split(' ')[0]}</strong> ${a.action}${a.target?' <em>'+a.target+'</em>':''}</div>
+    <div class="activity-time">${a.time}</div>
+  </div>`;
+}).join('');
+</script>
+<style>
+@media(max-width:900px){.responsive-grid-2,.responsive-grid-3{grid-template-columns:1fr!important}}
+</style>
+</body>
+</html>

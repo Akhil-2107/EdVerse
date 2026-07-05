@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Settings — EduVerse AI</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<div class="bg-mesh"></div><div class="bg-grid"></div>
+<div class="app-shell">
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+  <aside id="sidebar" class="sidebar"></aside>
+  <div class="main-content">
+    <header id="topbar" class="topbar"></header>
+    <main class="page-content page-enter">
+      <div class="page-header">
+        <h1>⚙️ Settings</h1>
+        <p>Manage your profile, preferences, and account.</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs" style="margin-bottom:24px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:999px;padding:4px;display:inline-flex">
+        <button class="tab-btn active" onclick="showTab('profile',this)">👤 Profile</button>
+        <button class="tab-btn" onclick="showTab('learning',this)">📚 Learning</button>
+        <button class="tab-btn" onclick="showTab('notifications',this)">🔔 Notifications</button>
+        <button class="tab-btn" onclick="showTab('account',this)">🔒 Account</button>
+      </div>
+
+      <!-- Profile Tab -->
+      <div id="tab-profile">
+        <div style="display:grid;grid-template-columns:1fr 280px;gap:24px" class="responsive-grid-2">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:24px">Personal Information</div>
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" class="form-input" id="s-name">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-input" id="s-email">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Choose Avatar</label>
+              <div id="avatar-picker" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
+            </div>
+            <button class="btn btn-primary" onclick="saveProfile()">💾 Save Changes</button>
+          </div>
+          <div class="card" style="text-align:center">
+            <div style="font-size:4rem;margin-bottom:12px" id="avatar-preview">🧑‍💻</div>
+            <div style="font-weight:700;font-size:1rem" id="profile-name-preview"></div>
+            <div style="font-size:13px;color:#64748b" id="profile-email-preview"></div>
+            <div class="divider"></div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+              <div style="display:flex;justify-content:space-between"><span style="color:#94a3b8">Role</span><span id="p-role"></span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#94a3b8">Level</span><strong id="p-level"></strong></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#94a3b8">XP</span><strong id="p-xp" style="color:#8b5cf6"></strong></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#94a3b8">Streak</span><strong id="p-streak" style="color:#f59e0b"></strong></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#94a3b8">Member since</span><span id="p-joined" style="color:#64748b"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Learning Tab -->
+      <div id="tab-learning" style="display:none">
+        <div class="card" style="max-width:600px">
+          <div class="card-title" style="margin-bottom:24px">Learning Preferences</div>
+          <div class="form-group">
+            <label class="form-label">Target Job Role</label>
+            <select class="form-select" id="s-job">
+              <option value="j1">Frontend Engineer</option>
+              <option value="j2">Full-Stack Developer</option>
+              <option value="j3">Software Engineer</option>
+              <option value="j4">Backend Engineer</option>
+              <option value="j5">DevOps Engineer</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Daily Learning Goal</label>
+            <div style="display:flex;align-items:center;gap:16px">
+              <input type="range" id="s-goal" min="15" max="180" step="15" style="flex:1;accent-color:#6366f1" oninput="document.getElementById('goal-val').textContent=this.value+' min/day'">
+              <span id="goal-val" style="font-weight:700;min-width:80px">60 min/day</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Difficulty Preference</label>
+            <div style="display:flex;gap:10px">
+              ${['Beginner','Intermediate','Advanced'].map((d,i)=>`<button class="btn btn-secondary${i===1?' active':''}" onclick="selectDiff(this)">${d}</button>`).join('')}
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()">💾 Save Preferences</button>
+        </div>
+      </div>
+
+      <!-- Notifications Tab -->
+      <div id="tab-notifications" style="display:none">
+        <div class="card" style="max-width:600px">
+          <div class="card-title" style="margin-bottom:24px">Notification Preferences</div>
+          ${[
+            {key:'daily',label:'Daily Learning Reminder',desc:'Get reminded to complete your daily goal'},
+            {key:'streak',label:'Streak Alerts',desc:'Don\'t let your streak break'},
+            {key:'badge',label:'Badge Earned',desc:'Celebrate when you unlock a new achievement'},
+            {key:'job',label:'Job Match Alerts',desc:'New jobs matching your skill profile'},
+            {key:'email',label:'Email Digest (Weekly)',desc:'Weekly summary of your progress'}
+          ].map(n=>`<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:16px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+            <div>
+              <div style="font-weight:600;font-size:14px;margin-bottom:4px">${n.label}</div>
+              <div style="font-size:12px;color:#64748b">${n.desc}</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked id="notif-${n.key}"><div class="toggle-slider"></div></label>
+          </div>`).join('')}
+          <button class="btn btn-primary" style="margin-top:20px" onclick="EV.toast('Notification preferences saved!','success')">💾 Save</button>
+        </div>
+      </div>
+
+      <!-- Account Tab -->
+      <div id="tab-account" style="display:none">
+        <div style="display:flex;flex-direction:column;gap:20px;max-width:600px">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:20px">Change Password</div>
+            <div class="form-group"><label class="form-label">Current Password</label><input type="password" class="form-input" placeholder="••••••••"></div>
+            <div class="form-group"><label class="form-label">New Password</label><input type="password" class="form-input" placeholder="Min 8 characters"></div>
+            <div class="form-group"><label class="form-label">Confirm New Password</label><input type="password" class="form-input" placeholder="Repeat new password"></div>
+            <button class="btn btn-primary" onclick="EV.toast('Password updated!','success')">Update Password</button>
+          </div>
+          <div class="card" style="border-color:rgba(239,68,68,.2)">
+            <div class="card-title" style="color:#ef4444;margin-bottom:16px">⚠️ Danger Zone</div>
+            <p style="font-size:13px;color:#94a3b8;margin-bottom:16px">These actions are irreversible. Please be certain.</p>
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <button class="btn btn-danger" onclick="if(confirm('Log out from all devices?')){EV.clearSession();location.href='login.html'}">🚪 Log Out</button>
+              <button class="btn btn-danger" onclick="EV.toast('Account deletion requested','warning')">🗑 Delete Account</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script src="app.js"></script>
+<script>
+if (!EV.requireAuth()) throw 0;
+const user = EV.getCurrentUser();
+EV.renderSidebar(user.role);
+EV.renderTopbar('Settings', user);
+
+let selectedAvatar = user.avatar || '🧑‍💻';
+
+// Populate profile
+document.getElementById('s-name').value = user.name;
+document.getElementById('s-email').value = user.email;
+document.getElementById('avatar-preview').textContent = user.avatar;
+document.getElementById('profile-name-preview').textContent = user.name;
+document.getElementById('profile-email-preview').textContent = user.email;
+document.getElementById('p-role').textContent = user.role;
+document.getElementById('p-level').textContent = 'Level ' + (user.level||1);
+document.getElementById('p-xp').textContent = '⚡ ' + (user.xp||0).toLocaleString() + ' XP';
+document.getElementById('p-streak').textContent = '🔥 ' + (user.streak||0) + ' days';
+document.getElementById('p-joined').textContent = user.joinedDate || '—';
+
+// Avatar picker
+const AVATARS = ['🧑‍💻','👩‍💻','👨‍💻','🧑‍🎓','👩‍🎓','👨‍🎓','🦊','🐱','🐼','🦁','🚀','⭐'];
+document.getElementById('avatar-picker').innerHTML = AVATARS.map(a=>`
+  <button onclick="pickAvatar('${a}')" style="width:40px;height:40px;border-radius:8px;border:2px solid ${a===selectedAvatar?'#6366f1':'rgba(255,255,255,.08)'};background:${a===selectedAvatar?'rgba(99,102,241,.1)':'rgba(255,255,255,.04)'};font-size:1.3rem;cursor:pointer;transition:all .2s" id="av-${a.codePointAt(0)}">${a}</button>`).join('');
+
+function pickAvatar(av) {
+  selectedAvatar = av;
+  document.getElementById('avatar-preview').textContent = av;
+  document.querySelectorAll('#avatar-picker button').forEach(b=>{ b.style.borderColor='rgba(255,255,255,.08)'; b.style.background='rgba(255,255,255,.04)'; });
+  const btn = document.getElementById('av-' + av.codePointAt(0));
+  if(btn){btn.style.borderColor='#6366f1';btn.style.background='rgba(99,102,241,.1)';}
+}
+
+// Learning settings
+if (document.getElementById('s-job')) document.getElementById('s-job').value = user.targetJob || 'j1';
+if (document.getElementById('s-goal')) { document.getElementById('s-goal').value = user.dailyGoal || 60; document.getElementById('goal-val').textContent = (user.dailyGoal||60) + ' min/day'; }
+
+function showTab(tab, btn) {
+  ['profile','learning','notifications','account'].forEach(t=>document.getElementById('tab-'+t).style.display='none');
+  document.querySelectorAll('.tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).style.display='block';
+  btn.classList.add('active');
+}
+function saveProfile() {
+  document.getElementById('profile-name-preview').textContent = document.getElementById('s-name').value;
+  EV.toast('Profile saved! ✅','success');
+}
+function saveSettings() { EV.toast('Learning preferences saved! ✅','success'); }
+function selectDiff(btn) { document.querySelectorAll('#tab-learning .btn.btn-secondary').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+</script>
+<style>
+.toggle{position:relative;display:inline-block;width:42px;height:22px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:rgba(255,255,255,.1);border-radius:999px;transition:.3s}
+.toggle-slider::before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+.toggle input:checked + .toggle-slider{background:#6366f1}
+.toggle input:checked + .toggle-slider::before{transform:translateX(20px)}
+@media(max-width:900px){.responsive-grid-2{grid-template-columns:1fr!important}}
+</style>
+</body>
+</html>
