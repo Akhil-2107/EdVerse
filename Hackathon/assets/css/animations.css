@@ -1,0 +1,143 @@
+/* ============================================================
+   EduVerse AI — Animations
+   ============================================================ */
+
+/* ── Fade in ── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.5s ease-out forwards; }
+.fade-in-delay-1 { animation-delay: 0.1s; opacity: 0; }
+.fade-in-delay-2 { animation-delay: 0.2s; opacity: 0; }
+.fade-in-delay-3 { animation-delay: 0.3s; opacity: 0; }
+.fade-in-delay-4 { animation-delay: 0.4s; opacity: 0; }
+
+/* ── Slide in ── */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Modal ── */
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Pulse glow ── */
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.6; transform: scale(0.95); }
+  50%      { opacity: 1;   transform: scale(1.05); }
+}
+.pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+
+/* ── Float ── */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+.float { animation: float 4s ease-in-out infinite; }
+
+/* ── Spin ── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.spin { animation: spin 1s linear infinite; }
+.spin-slow { animation: spin 8s linear infinite; }
+
+/* ── Scan bar ── */
+@keyframes scanVert {
+  0%   { top: 10%; }
+  50%  { top: 85%; }
+  100% { top: 10%; }
+}
+
+/* ── Typing dots ── */
+@keyframes typingDots {
+  0%, 60%, 100% { opacity: 0; transform: translateY(0); }
+  30%           { opacity: 1; transform: translateY(-4px); }
+}
+.typing-indicator { display: flex; gap: 4px; padding: var(--sp-3); }
+.typing-indicator span {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text-muted);
+  animation: typingDots 1.4s infinite;
+}
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+/* ── Count up ── */
+@keyframes countPulse {
+  0%  { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* ── Gradient border animation ── */
+@keyframes borderGlow {
+  0%, 100% { border-color: rgba(99,102,241,0.3); }
+  50%      { border-color: rgba(139,92,246,0.5); }
+}
+
+/* ── Shimmer loader ── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.03) 25%,
+    rgba(255,255,255,0.06) 50%,
+    rgba(255,255,255,0.03) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ── Intersection Observer scroll reveal ── */
+.reveal {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible {
+  opacity: 1; transform: translateY(0);
+}
+
+/* ── Hero orbit ring ── */
+@keyframes orbit {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.hero-orbit {
+  position: absolute;
+  border: 1px solid rgba(99,102,241,0.1);
+  border-radius: 50%;
+  animation: orbit 30s linear infinite;
+}
+.hero-orbit-1 { width: 400px; height: 400px; top: 50%; left: 50%; margin: -200px 0 0 -200px; }
+.hero-orbit-2 { width: 600px; height: 600px; top: 50%; left: 50%; margin: -300px 0 0 -300px; animation-duration: 45s; animation-direction: reverse; }
+.hero-orbit-dot {
+  position: absolute; top: -5px; left: 50%; margin-left: -5px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent-primary);
+  box-shadow: 0 0 10px var(--accent-primary);
+}
+
+/* ── Progress bar animation ── */
+.progress-fill { animation: progressGrow 1s ease-out forwards; }
+@keyframes progressGrow {
+  from { width: 0; }
+}
+
+/* ── Page transitions ── */
+.page-enter { animation: fadeIn 0.35s ease-out forwards; }

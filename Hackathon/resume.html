@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Resume Analyzer — EduVerse AI</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<div class="bg-mesh"></div><div class="bg-grid"></div>
+<div class="app-shell">
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+  <aside id="sidebar" class="sidebar"></aside>
+  <div class="main-content">
+    <header id="topbar" class="topbar"></header>
+    <main class="page-content page-enter">
+      <div class="page-header">
+        <h1>📄 Resume Analyzer</h1>
+        <p>AI-powered ATS analysis and improvement suggestions.</p>
+      </div>
+
+      <!-- Upload Zone -->
+      <div id="view-upload">
+        <div class="card" style="border:2px dashed rgba(99,102,241,.3);background:rgba(99,102,241,.03);text-align:center;padding:48px;margin-bottom:24px;cursor:pointer;transition:all .3s" id="drop-zone"
+          ondragover="event.preventDefault();this.style.borderColor='#6366f1'" 
+          ondragleave="this.style.borderColor='rgba(99,102,241,.3)'"
+          ondrop="event.preventDefault();analyzeResume()">
+          <div style="font-size:3rem;margin-bottom:16px">📄</div>
+          <div style="font-size:1rem;font-weight:700;margin-bottom:8px">Drop your resume here</div>
+          <div style="font-size:13px;color:#64748b;margin-bottom:24px">Supports PDF, DOCX, TXT</div>
+          <button class="btn btn-primary" onclick="analyzeResume()">📤 Upload & Analyze</button>
+        </div>
+
+        <!-- Demo profiles -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="responsive-grid-2">
+          <div class="card card-glow" style="cursor:pointer" onclick="analyzeDemo('profile1')">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+              <div class="avatar">🧑‍💻</div>
+              <div><div style="font-weight:700">Akhil Reddy</div><div style="font-size:12px;color:#64748b">Junior Web Developer</div></div>
+              <div style="margin-left:auto;font-size:1.5rem;font-weight:800;color:#f59e0b">68</div>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:68%;background:#f59e0b"></div></div>
+            <div style="font-size:12px;color:#64748b;margin-top:8px">ATS Score • Click to analyze</div>
+          </div>
+          <div class="card card-glow" style="cursor:pointer" onclick="analyzeDemo('profile2')">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+              <div class="avatar">👩‍💻</div>
+              <div><div style="font-weight:700">Sarah Connor</div><div style="font-size:12px;color:#64748b">Full-Stack Developer</div></div>
+              <div style="margin-left:auto;font-size:1.5rem;font-weight:800;color:#10b981">82</div>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:82%;background:#10b981"></div></div>
+            <div style="font-size:12px;color:#64748b;margin-top:8px">ATS Score • Click to analyze</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scanning View -->
+      <div id="view-scanning" style="display:none;text-align:center;padding:60px 0">
+        <div style="font-size:3rem;margin-bottom:24px;animation:spin 2s linear infinite">🔍</div>
+        <div style="font-size:1.25rem;font-weight:700;margin-bottom:12px">Analyzing your resume…</div>
+        <div id="scan-step" style="font-size:13px;color:#64748b;margin-bottom:24px">Parsing document structure…</div>
+        <div class="progress-bar" style="max-width:400px;margin:0 auto;height:6px">
+          <div class="progress-fill" id="scan-bar" style="width:0%;transition:width .3s"></div>
+        </div>
+      </div>
+
+      <!-- Results View -->
+      <div id="view-results" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 320px;gap:24px;margin-bottom:24px" class="responsive-grid-2">
+          <!-- Score Card -->
+          <div class="card" style="text-align:center;padding:40px">
+            <div id="score-value" style="font-size:5rem;font-weight:800;line-height:1;margin-bottom:8px">0</div>
+            <div style="font-size:1rem;font-weight:700;margin-bottom:4px">ATS Score</div>
+            <div id="score-label" style="font-size:13px;color:#94a3b8;margin-bottom:24px"></div>
+            <div class="progress-bar" style="height:8px;max-width:300px;margin:0 auto 24px">
+              <div class="progress-fill" id="score-bar" style="width:0%;transition:width 1s;height:8px"></div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="resetAnalyzer()">← Analyze Another</button>
+          </div>
+
+          <!-- Skills -->
+          <div class="card">
+            <div style="margin-bottom:16px">
+              <div style="font-size:12px;font-weight:700;color:#10b981;margin-bottom:10px">✅ DETECTED SKILLS</div>
+              <div id="detected-skills" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+            </div>
+            <div class="divider"></div>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:#ef4444;margin-bottom:10px">❌ MISSING SKILLS</div>
+              <div id="missing-skills" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Suggestions -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:20px">💡 AI Improvement Suggestions</div>
+          <div id="suggestions-list" style="display:flex;flex-direction:column;gap:12px"></div>
+          <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
+            <a href="roadmap.html" class="btn btn-primary">📚 Start Learning Missing Skills</a>
+            <a href="jobs.html" class="btn btn-secondary">💼 View Job Matches</a>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script src="app.js"></script>
+<script>
+if (!EV.requireAuth()) throw 0;
+const user = EV.getCurrentUser();
+EV.renderSidebar(user.role);
+EV.renderTopbar('Resume Analyzer', user);
+
+function analyzeResume() { analyzeDemo('profile1'); }
+
+async function analyzeDemo(profileKey) {
+  document.getElementById('view-upload').style.display = 'none';
+  document.getElementById('view-scanning').style.display = 'block';
+  const steps = ['Parsing document structure…','Extracting skills and keywords…','Running ATS compatibility check…','Comparing with job market data…','Generating AI recommendations…'];
+  for (let i = 0; i < steps.length; i++) {
+    document.getElementById('scan-step').textContent = steps[i];
+    document.getElementById('scan-bar').style.width = ((i+1)/steps.length*100) + '%';
+    await EV.sleep(700);
+  }
+  document.getElementById('view-scanning').style.display = 'none';
+  showResults(EV.resumeProfiles[profileKey]);
+}
+
+function showResults(profile) {
+  document.getElementById('view-results').style.display = 'block';
+  const scoreEl = document.getElementById('score-value');
+  const color = profile.score >= 80 ? '#10b981' : profile.score >= 60 ? '#f59e0b' : '#ef4444';
+  scoreEl.style.color = color;
+  EV.animateCount(scoreEl, 0, profile.score, 1200);
+  document.getElementById('score-label').textContent = profile.score >= 80 ? '🌟 Strong Resume' : profile.score >= 60 ? '📊 Good — Needs Improvement' : '⚠️ Needs Significant Work';
+  document.getElementById('score-bar').style.background = color;
+  setTimeout(() => { document.getElementById('score-bar').style.width = profile.score + '%'; }, 100);
+  document.getElementById('detected-skills').innerHTML = profile.skills.map(s => `<span class="badge badge-green">✓ ${s}</span>`).join('');
+  document.getElementById('missing-skills').innerHTML = profile.missing.map(s => `<span class="badge" style="background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2)">✗ ${s}</span>`).join('');
+  document.getElementById('suggestions-list').innerHTML = profile.suggestions.map((s,i) => `
+    <div style="display:flex;gap:14px;padding:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px">
+      <div style="width:24px;height:24px;border-radius:50%;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#6366f1;flex-shrink:0">${i+1}</div>
+      <div style="font-size:13px;color:#94a3b8;line-height:1.6">${s}</div>
+    </div>`).join('');
+}
+
+function resetAnalyzer() {
+  document.getElementById('view-results').style.display = 'none';
+  document.getElementById('view-upload').style.display = 'block';
+}
+</script>
+<style>
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:900px){.responsive-grid-2{grid-template-columns:1fr!important}}
+</style>
+</body>
+</html>

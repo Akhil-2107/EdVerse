@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Educator Dashboard — EduVerse AI</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<div class="bg-mesh"></div><div class="bg-grid"></div>
+<div class="app-shell">
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+  <aside id="sidebar" class="sidebar"></aside>
+  <div class="main-content">
+    <header id="topbar" class="topbar"></header>
+    <main class="page-content page-enter">
+      <div class="page-header">
+        <h1>📊 Educator Dashboard</h1>
+        <p>Real-time student analytics, engagement heatmap, and at-risk alerts.</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stat-cards" id="edu-stats"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:24px;margin-bottom:24px" class="responsive-grid-2">
+        <!-- Engagement Chart -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📈 Student Engagement (Last 7 Days)</div>
+          </div>
+          <div class="chart-container"><canvas id="engagement-chart"></canvas></div>
+        </div>
+        <!-- Completion Donut -->
+        <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+          <div class="card-title">✅ Course Completion</div>
+          <canvas id="completion-donut"></canvas>
+          <div id="completion-legend" style="font-size:12px;display:flex;flex-direction:column;gap:8px;width:100%"></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:24px" class="responsive-grid-2">
+        <!-- Heatmap -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">🌡️ Skill Mastery Heatmap</div>
+          <div style="overflow-x:auto">
+            <table class="heatmap-table" id="heatmap-table"></table>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:12px;font-size:11px;color:#64748b">
+            <div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:12px;border-radius:3px;background:rgba(16,185,129,.6)"></div>Master (85%+)</div>
+            <div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:12px;border-radius:3px;background:rgba(99,102,241,.5)"></div>Good (65%+)</div>
+            <div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:12px;border-radius:3px;background:rgba(245,158,11,.5)"></div>OK (40%+)</div>
+            <div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:12px;border-radius:3px;background:rgba(239,68,68,.5)"></div>Weak</div>
+          </div>
+        </div>
+
+        <!-- At-Risk -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">⚠️ At-Risk Students</div>
+            <span class="badge badge-orange" id="risk-count">0</span>
+          </div>
+          <div id="at-risk-list"></div>
+        </div>
+      </div>
+
+      <!-- Student Table -->
+      <div class="card" style="margin-top:24px">
+        <div class="card-header">
+          <div class="card-title">👥 All Students</div>
+          <button class="btn btn-secondary btn-sm" onclick="EV.toast('Export ready! 📥','success')">📥 Export CSV</button>
+        </div>
+        <div style="overflow-x:auto"><table id="student-table" style="width:100%;border-collapse:collapse"></table></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script src="app.js"></script>
+<script>
+if (!EV.requireAuth()) throw 0;
+const user = EV.getCurrentUser();
+EV.renderSidebar(user.role);
+EV.renderTopbar('Educator Dashboard', user);
+
+const students = EV.users.filter(u => u.role === 'learner');
+const avgXP = Math.round(students.reduce((s,u)=>s+u.xp,0)/students.length);
+const avgStreak = Math.round(students.reduce((s,u)=>s+(u.streak||0),0)/students.length);
+const atRisk = students.filter(s => (s.streak||0) < 5 || s.dailyProgress < 20);
+
+// Stats
+document.getElementById('edu-stats').innerHTML = [
+  {icon:'👥',label:'Total Students',value:students.length,change:'Active learners'},
+  {icon:'⚡',label:'Avg XP',value:avgXP,change:'Per student'},
+  {icon:'🔥',label:'Avg Streak',value:avgStreak,suffix:'d',change:'Days'},
+  {icon:'⚠️',label:'At-Risk',value:atRisk.length,change:'Need attention',color:'var(--accent-red)'}
+].map(s=>`<div class="card stat-card card-accent card-glow">
+  <div class="stat-icon">${s.icon}</div>
+  <div>
+    <div class="stat-value" data-target="${s.value}" data-suffix="${s.suffix||''}" ${s.color?`style="color:${s.color}"`:''}>${s.value}</div>
+    <div class="stat-label">${s.label}</div>
+    <div class="stat-change up">${s.change}</div>
+  </div>
+</div>`).join('');
+document.querySelectorAll('.stat-value[data-target]').forEach(el => EV.animateCount(el,0,parseInt(el.dataset.target),1000,el.dataset.suffix));
+
+// Chart
+EV.drawLineChart('engagement-chart',['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],[
+  {label:'Active Students',data:[8,12,10,15,13,11,14],color:'#6366f1'},
+  {label:'Lessons Completed',data:[24,38,30,45,40,34,48],color:'#06b6d4'},
+  {label:'XP Earned (÷100)',data:[32,48,38,55,50,42,62],color:'#10b981'}
+],{height:200});
+
+// Completion donut
+const completedAll = students.filter(s=>s.completedLessons?.length>=12).length;
+const inProgress = students.filter(s=>s.completedLessons?.length>=4&&s.completedLessons?.length<12).length;
+const started = students.length - completedAll - inProgress;
+EV.drawDonutChart('completion-donut',[
+  {value:completedAll,color:'#10b981'},{value:inProgress,color:'#6366f1'},{value:started,color:'#f59e0b'}
+],{size:140,centerText:students.length,centerLabel:'Students',centerFontSize:22});
+document.getElementById('completion-legend').innerHTML=[
+  {label:'Completed',val:completedAll,color:'#10b981'},
+  {label:'In Progress',val:inProgress,color:'#6366f1'},
+  {label:'Just Started',val:started,color:'#f59e0b'}
+].map(l=>`<div style="display:flex;align-items:center;gap:8px"><div style="width:10px;height:10px;border-radius:50%;background:${l.color}"></div><span style="color:#94a3b8;font-size:12px">${l.label}</span><span style="margin-left:auto;font-weight:700;font-size:12px">${l.val}</span></div>`).join('');
+
+// Heatmap
+const skills = ['html','css','javascript','react','nodejs'];
+const thead = `<thead><tr><th style="text-align:left;padding:8px">Student</th>${skills.map(s=>`<th>${EV.SKILL_LABELS[s]}</th>`).join('')}</tr></thead>`;
+const tbody = `<tbody>${students.map(s=>`<tr>
+  <td style="padding:8px;font-size:13px;white-space:nowrap;font-weight:600">${s.avatar} ${s.name.split(' ')[0]}</td>
+  ${skills.map(sk=>{const v=s.skills?.[sk]||0;const cls=v>=85?'hm-master':v>=65?'hm-good':v>=40?'hm-ok':'hm-weak';
+    return`<td style="padding:4px 6px;text-align:center"><div class="hm-cell ${cls}" title="${EV.SKILL_LABELS[sk]}: ${v}%" style="display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(255,255,255,.8)">${v}%</div></td>`;
+  }).join('')}
+</tr>`).join('')}</tbody>`;
+document.getElementById('heatmap-table').innerHTML = thead + tbody;
+
+// At-Risk
+document.getElementById('risk-count').textContent = atRisk.length;
+document.getElementById('at-risk-list').innerHTML = atRisk.length ? atRisk.map(s=>`
+  <div class="risk-card">
+    <div class="risk-header">
+      <div class="risk-student">
+        <div class="avatar avatar-sm">${s.avatar}</div>
+        <div><div class="risk-student-name">${s.name}</div>
+          <div class="risk-issue">${(s.streak||0)<5?'🔥 Low streak: '+s.streak+'d':'⏰ Low daily progress'}</div>
+        </div>
+      </div>
+    </div>
+    <div class="risk-actions">
+      <button class="btn btn-secondary btn-sm" onclick="EV.toast('Nudge sent to ${s.name}! 📧','info')">📧 Send Nudge</button>
+      <button class="btn btn-ghost btn-sm">👁 View Profile</button>
+    </div>
+  </div>`).join('') : '<div style="padding:20px;text-align:center;color:#64748b;font-size:13px">✅ All students on track!</div>';
+
+// Student table
+document.getElementById('student-table').innerHTML = `
+  <thead><tr style="border-bottom:1px solid rgba(255,255,255,.06)">
+    ${['Student','XP','Level','Streak','Progress','Readiness'].map(h=>`<th style="text-align:left;padding:10px 12px;font-size:11px;color:#64748b;text-transform:uppercase;font-weight:700">${h}</th>`).join('')}
+  </tr></thead>
+  <tbody>${students.map(s=>{
+    const r=EV.calcJobReadiness(s.skills||{},s.targetJob||'j1');
+    return`<tr style="border-bottom:1px solid rgba(255,255,255,.04)">
+      <td style="padding:10px 12px"><div style="display:flex;align-items:center;gap:10px">
+        <div class="avatar avatar-sm">${s.avatar}</div>
+        <div><div style="font-size:13px;font-weight:600">${s.name}</div><div style="font-size:11px;color:#64748b">${s.email}</div></div>
+      </div></td>
+      <td style="padding:10px 12px;font-size:13px;font-weight:700">⚡ ${(s.xp||0).toLocaleString()}</td>
+      <td style="padding:10px 12px"><span class="badge badge-primary">Lvl ${s.level||1}</span></td>
+      <td style="padding:10px 12px;font-size:13px">${s.streak?'🔥 '+s.streak+'d':'—'}</td>
+      <td style="padding:10px 12px"><div class="progress-bar" style="width:100px"><div class="progress-fill" style="width:${Math.round((s.completedLessons?.length||0)/16*100)}%"></div></div></td>
+      <td style="padding:10px 12px"><span style="font-weight:700;color:${EV.skillColor(r)}">${r}%</span></td>
+    </tr>`;
+  }).join('')}</tbody>`;
+</script>
+<style>@media(max-width:900px){.responsive-grid-2{grid-template-columns:1fr!important}}</style>
+</body>
+</html>

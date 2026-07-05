@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skill Graph — EduVerse AI</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<div class="bg-mesh"></div><div class="bg-grid"></div>
+<div class="app-shell">
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+  <aside id="sidebar" class="sidebar"></aside>
+  <div class="main-content">
+    <header id="topbar" class="topbar"></header>
+    <main class="page-content page-enter">
+      <div class="page-header">
+        <h1>🕸️ Skill Graph</h1>
+        <p>Your knowledge as an interactive network — see mastery and dependencies.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:24px" class="responsive-grid-2">
+        <!-- Graph Canvas -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Knowledge Network</div>
+            <div class="tabs">
+              <button class="tab-btn active" onclick="setView('network',this)">Network</button>
+              <button class="tab-btn" onclick="setView('bars',this)">Bars</button>
+              <button class="tab-btn" onclick="setView('radar',this)">Radar</button>
+            </div>
+          </div>
+          <div id="graph-network" style="width:100%;overflow:hidden;border-radius:10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05)">
+            <svg id="skill-svg" width="100%" height="440" viewBox="0 0 700 440" style="display:block"></svg>
+          </div>
+          <div id="graph-bars" style="display:none;padding:8px 0" id="bars-view"></div>
+          <div id="graph-radar" style="display:none;display:flex;justify-content:center;padding:16px 0"></div>
+        </div>
+
+        <!-- Panel -->
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">📌 Selected Skill</div>
+            <div id="skill-detail">
+              <div style="text-align:center;padding:24px;color:#64748b;font-size:13px">Click a node in the graph to see details</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">🏆 Top Skills</div>
+            <div id="top-skills"></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">⚠️ Skill Gaps</div>
+            <div id="skill-gaps"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="app.js"></script>
+<script>
+if (!EV.requireAuth()) throw 0;
+const user = EV.getCurrentUser();
+EV.renderSidebar(user.role);
+EV.renderTopbar('Skill Graph', user);
+
+const GROUP_COLORS = {frontend:'#6366f1', backend:'#06b6d4', tools:'#10b981', advanced:'#f59e0b'};
+const nodes = EV.skillGraph.nodes;
+const edges = EV.skillGraph.edges;
+
+function buildSVG() {
+  const svg = document.getElementById('skill-svg');
+  const svgW = svg.parentElement.offsetWidth || 680;
+  svg.setAttribute('viewBox', `0 0 ${svgW} 440`);
+  const scaleX = svgW / 700;
+  svg.innerHTML = '';
+
+  // Draw edges
+  edges.forEach(e => {
+    const from = nodes.find(n => n.id === e.from);
+    const to = nodes.find(n => n.id === e.to);
+    if (!from || !to) return;
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', from.x * scaleX); line.setAttribute('y1', from.y);
+    line.setAttribute('x2', to.x * scaleX); line.setAttribute('y2', to.y);
+    line.setAttribute('stroke', 'rgba(255,255,255,0.08)'); line.setAttribute('stroke-width', '2');
+    svg.appendChild(line);
+  });
+
+  // Draw nodes
+  nodes.forEach(n => {
+    const skill = user.skills[n.id] || 0;
+    const r = 18 + (skill / 100) * 18;
+    const color = GROUP_COLORS[n.group] || '#6366f1';
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('cursor', 'pointer');
+    g.setAttribute('transform', `translate(${n.x * scaleX},${n.y})`);
+    g.addEventListener('click', () => showSkillDetail(n.id));
+
+    // Outer glow ring
+    const glow = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    glow.setAttribute('r', r + 8); glow.setAttribute('fill', color + '15');
+    g.appendChild(glow);
+
+    // Progress ring (stroke arc)
+    const circumf = 2 * Math.PI * r;
+    const track = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    track.setAttribute('r', r); track.setAttribute('fill', 'none');
+    track.setAttribute('stroke', 'rgba(255,255,255,0.05)'); track.setAttribute('stroke-width', '3');
+    g.appendChild(track);
+
+    const ring = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    ring.setAttribute('r', r); ring.setAttribute('fill', 'none');
+    ring.setAttribute('stroke', color); ring.setAttribute('stroke-width', '3');
+    ring.setAttribute('stroke-dasharray', circumf);
+    ring.setAttribute('stroke-dashoffset', circumf - (skill/100) * circumf);
+    ring.setAttribute('transform', 'rotate(-90)');
+    ring.setAttribute('stroke-linecap', 'round');
+    g.appendChild(ring);
+
+    // Fill
+    const fill = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    fill.setAttribute('r', r - 3); fill.setAttribute('fill', color + '22');
+    g.appendChild(fill);
+
+    // Label
+    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+    text.setAttribute('text-anchor','middle'); text.setAttribute('dy', '4');
+    text.setAttribute('fill','#f1f5f9'); text.setAttribute('font-size','10');
+    text.setAttribute('font-weight','700'); text.setAttribute('font-family','Inter,sans-serif');
+    text.textContent = (EV.SKILL_LABELS[n.id]||n.id).slice(0,6);
+    g.appendChild(text);
+
+    // Skill % below
+    const pct = document.createElementNS('http://www.w3.org/2000/svg','text');
+    pct.setAttribute('text-anchor','middle'); pct.setAttribute('dy', r + 18);
+    pct.setAttribute('fill',color); pct.setAttribute('font-size','10');
+    pct.setAttribute('font-weight','700'); pct.setAttribute('font-family','Inter,sans-serif');
+    pct.textContent = skill + '%';
+    g.appendChild(pct);
+
+    svg.appendChild(g);
+  });
+}
+buildSVG();
+
+function showSkillDetail(id) {
+  const skill = user.skills[id] || 0;
+  const color = EV.skillColor(skill);
+  const deps = edges.filter(e => e.to === id).map(e => EV.SKILL_LABELS[e.from]||e.from);
+  const unlocks = edges.filter(e => e.from === id).map(e => EV.SKILL_LABELS[e.to]||e.to);
+  document.getElementById('skill-detail').innerHTML = `
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:2rem;font-weight:800;color:${color}">${skill}%</div>
+      <div style="font-size:1rem;font-weight:700">${EV.SKILL_LABELS[id]||id}</div>
+    </div>
+    <div class="progress-bar" style="margin-bottom:16px"><div class="progress-fill" style="width:${skill}%;background:${color}"></div></div>
+    ${deps.length ? `<div style="margin-bottom:12px"><div style="font-size:11px;color:#64748b;margin-bottom:6px">REQUIRES</div><div style="display:flex;flex-wrap:wrap;gap:6px">${deps.map(d=>`<span class="badge badge-cyan">${d}</span>`).join('')}</div></div>` : ''}
+    ${unlocks.length ? `<div><div style="font-size:11px;color:#64748b;margin-bottom:6px">UNLOCKS</div><div style="display:flex;flex-wrap:wrap;gap:6px">${unlocks.map(u=>`<span class="badge badge-green">${u}</span>`).join('')}</div></div>` : ''}
+    <button class="btn btn-primary btn-block btn-sm" style="margin-top:16px" onclick="location.href='assessment.html'">Take Quiz →</button>`;
+}
+
+// Top skills
+const sorted = Object.entries(user.skills).sort((a,b)=>b[1]-a[1]);
+document.getElementById('top-skills').innerHTML = sorted.slice(0,5).map(([k,v])=>`
+  <div class="skill-bar-item" style="margin-bottom:12px">
+    <div class="skill-bar-header"><span>${EV.SKILL_LABELS[k]||k}</span><span style="color:${EV.skillColor(v)};font-weight:700">${v}%</span></div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${v}%;background:${EV.skillColor(v)}"></div></div>
+  </div>`).join('');
+
+// Skill gaps
+document.getElementById('skill-gaps').innerHTML = sorted.slice(-4).reverse().map(([k,v])=>`
+  <div class="skill-bar-item" style="margin-bottom:12px">
+    <div class="skill-bar-header"><span>${EV.SKILL_LABELS[k]||k}</span><span style="color:${EV.skillColor(v)};font-weight:700">${v}%</span></div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${v}%;background:${EV.skillColor(v)}"></div></div>
+  </div>`).join('');
+
+// View toggles
+function setView(v, btn) {
+  document.querySelectorAll('.tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('graph-network').style.display = v==='network'?'block':'none';
+  const barsEl = document.getElementById('graph-bars');
+  const radarEl = document.getElementById('graph-radar');
+  barsEl.style.display = v==='bars'?'block':'none';
+  radarEl.style.display = v==='radar'?'flex':'none';
+  if (v === 'bars') {
+    barsEl.innerHTML = Object.entries(user.skills).map(([k,val])=>`
+      <div class="skill-bar-item" style="margin-bottom:14px">
+        <div class="skill-bar-header"><span>${EV.SKILL_LABELS[k]||k}</span><span style="color:${EV.skillColor(val)};font-weight:700">${val}%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${val}%;background:${EV.skillColor(val)}"></div></div>
+      </div>`).join('');
+  }
+  if (v === 'radar') {
+    radarEl.innerHTML = '<canvas id="radar-big"></canvas>';
+    const keys = Object.keys(user.skills);
+    EV.drawRadarChart('radar-big', keys.map(k=>EV.SKILL_LABELS[k]||k), [{label:'Your Skills', data:keys.map(k=>user.skills[k]), color:'#6366f1'}], {size:320});
+  }
+}
+
+window.addEventListener('resize', buildSVG);
+</script>
+<style>@media(max-width:900px){.responsive-grid-2{grid-template-columns:1fr!important}}</style>
+</body>
+</html>

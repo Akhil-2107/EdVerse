@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assessment — EduVerse AI</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<div class="bg-mesh"></div><div class="bg-grid"></div>
+<div class="app-shell">
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+  <aside id="sidebar" class="sidebar"></aside>
+  <div class="main-content">
+    <header id="topbar" class="topbar"></header>
+    <main class="page-content page-enter">
+
+      <!-- Selection View -->
+      <div id="view-select">
+        <div class="page-header">
+          <h1>📝 Adaptive Assessment</h1>
+          <p>Test your knowledge and let AI identify skill gaps.</p>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px" id="assessment-cards"></div>
+      </div>
+
+      <!-- Quiz View -->
+      <div id="view-quiz" style="display:none;max-width:700px;margin:0 auto">
+        <div class="card" style="padding:32px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+            <div style="font-size:13px;color:#64748b">Question <span id="q-num">1</span> of <span id="q-total">5</span></div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span id="quiz-timer" style="font-size:13px;font-weight:700;color:#06b6d4">⏱ 10:00</span>
+              <button class="btn btn-ghost btn-sm" onclick="endQuiz()">✕ Exit</button>
+            </div>
+          </div>
+          <div class="progress-bar" style="margin-bottom:28px"><div class="progress-fill" id="q-progress" style="width:0%"></div></div>
+          <div id="question-text" class="quiz-question-text"></div>
+          <div id="quiz-options" class="quiz-options"></div>
+          <div class="quiz-actions">
+            <button class="btn btn-ghost" id="skip-btn" onclick="skipQuestion()">Skip →</button>
+            <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" disabled>Next Question →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results View -->
+      <div id="view-results" style="display:none;max-width:640px;margin:0 auto">
+        <div class="card" style="text-align:center;padding:48px 32px">
+          <div id="result-emoji" style="font-size:4rem;margin-bottom:16px">🎯</div>
+          <div id="result-score" style="font-size:3.5rem;font-weight:800;margin-bottom:8px" class="gradient-text">0%</div>
+          <div id="result-title" style="font-size:1.25rem;font-weight:700;margin-bottom:12px"></div>
+          <div id="result-desc" style="color:#94a3b8;font-size:14px;line-height:1.6;margin-bottom:32px"></div>
+          <div id="result-breakdown" style="text-align:left;margin-bottom:32px"></div>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+            <button class="btn btn-secondary" onclick="retakeQuiz()">🔄 Retake Quiz</button>
+            <a href="roadmap.html" class="btn btn-primary">🗺️ View Roadmap</a>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script src="app.js"></script>
+<script>
+if (!EV.requireAuth()) throw 0;
+const user = EV.getCurrentUser();
+EV.renderSidebar(user.role);
+EV.renderTopbar('Assessment', user);
+
+let currentAssessment = null, currentQ = 0, answers = [], timer = null, timeLeft = 600, selectedOpt = null;
+const DIFF_LABELS = {beginner:'🟢 Beginner', intermediate:'🟡 Intermediate', advanced:'🔴 Advanced'};
+
+// Render assessment cards
+document.getElementById('assessment-cards').innerHTML = EV.assessments.map(a => {
+  const saved = EV.getUserData(user.id, 'quiz_' + a.id);
+  return `<div class="card card-accent card-glow" style="cursor:pointer" onclick="startQuiz('${a.id}')">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+      <div>
+        <div style="font-size:1rem;font-weight:700;margin-bottom:6px">${a.title}</div>
+        <span class="badge badge-primary">${EV.SKILL_LABELS[a.skill]||a.skill}</span>
+      </div>
+      <span class="badge badge-orange">${DIFF_LABELS[a.difficulty]||a.difficulty}</span>
+    </div>
+    <div style="font-size:13px;color:#94a3b8;margin-bottom:16px">${a.questions.length} questions · ⏱ ${Math.round(a.timeLimit/60)} min</div>
+    ${saved ? `<div style="font-size:12px;color:#10b981;margin-bottom:12px">✅ Last score: ${saved.score}%</div>` : ''}
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div class="progress-bar" style="flex:1;margin-right:12px"><div class="progress-fill" style="width:${saved?saved.score:0}%"></div></div>
+      <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();startQuiz('${a.id}')">${saved?'Retake':'Start'}</button>
+    </div>
+  </div>`;
+}).join('');
+
+function startQuiz(id) {
+  currentAssessment = EV.assessments.find(a => a.id === id);
+  currentQ = 0; answers = []; selectedOpt = null;
+  timeLeft = currentAssessment.timeLimit;
+  document.getElementById('view-select').style.display = 'none';
+  document.getElementById('view-quiz').style.display = 'block';
+  document.getElementById('q-total').textContent = currentAssessment.questions.length;
+  renderQuestion(); startTimer();
+}
+
+function renderQuestion() {
+  const q = currentAssessment.questions[currentQ];
+  document.getElementById('q-num').textContent = currentQ + 1;
+  document.getElementById('q-progress').style.width = ((currentQ / currentAssessment.questions.length) * 100) + '%';
+  document.getElementById('question-text').textContent = q.text;
+  document.getElementById('next-btn').disabled = true;
+  selectedOpt = null;
+  const LETTERS = ['A','B','C','D'];
+  document.getElementById('quiz-options').innerHTML = q.options.map((opt, i) => `
+    <button class="quiz-option" onclick="selectOption(${i})" id="opt-${i}">
+      <div class="quiz-option-letter">${LETTERS[i]}</div>
+      <span>${opt}</span>
+    </button>`).join('');
+}
+
+function selectOption(idx) {
+  if (selectedOpt !== null) return;
+  selectedOpt = idx;
+  const q = currentAssessment.questions[currentQ];
+  answers.push({questionId:q.id, selected:idx, correct:q.correct});
+  // Highlight
+  document.querySelectorAll('.quiz-option').forEach((el, i) => {
+    if (i === q.correct) el.classList.add('correct');
+    else if (i === idx && idx !== q.correct) el.classList.add('wrong');
+    el.disabled = true;
+  });
+  document.getElementById('next-btn').disabled = false;
+  if (idx === q.correct) EV.toast('✅ Correct! +' + (10 * (q.difficulty||1)) + ' XP', 'success', 1500);
+  else EV.toast('❌ Incorrect — review this concept', 'error', 2000);
+}
+
+function nextQuestion() {
+  if (currentQ < currentAssessment.questions.length - 1) { currentQ++; renderQuestion(); }
+  else showResults();
+}
+
+function skipQuestion() {
+  const q = currentAssessment.questions[currentQ];
+  answers.push({questionId:q.id, selected:-1, correct:q.correct});
+  if (currentQ < currentAssessment.questions.length - 1) { currentQ++; renderQuestion(); }
+  else showResults();
+}
+
+function startTimer() {
+  clearInterval(timer);
+  timer = setInterval(() => {
+    timeLeft--;
+    const m = String(Math.floor(timeLeft/60)).padStart(2,'0');
+    const s = String(timeLeft%60).padStart(2,'0');
+    const el = document.getElementById('quiz-timer');
+    if (el) el.textContent = '⏱ ' + m + ':' + s;
+    if (el) el.style.color = timeLeft < 60 ? '#ef4444' : '#06b6d4';
+    if (timeLeft <= 0) { clearInterval(timer); showResults(); }
+  }, 1000);
+}
+
+function endQuiz() { clearInterval(timer); showResults(); }
+
+function showResults() {
+  clearInterval(timer);
+  const correct = answers.filter(a => a.selected === a.correct).length;
+  const total = currentAssessment.questions.length;
+  const pct = Math.round((correct/total)*100);
+  EV.setUserData(user.id, 'quiz_' + currentAssessment.id, {score:pct, date:new Date().toLocaleDateString()});
+  document.getElementById('view-quiz').style.display = 'none';
+  document.getElementById('view-results').style.display = 'block';
+  document.getElementById('result-score').textContent = pct + '%';
+  const grade = pct >= 90 ? {emoji:'🏆', title:'Outstanding!', desc:'You\'ve mastered this topic. Ready to advance!'} :
+    pct >= 70 ? {emoji:'🎯', title:'Great Job!', desc:'Solid understanding. A bit more practice and you\'ll be perfect.'} :
+    pct >= 50 ? {emoji:'📖', title:'Good Effort!', desc:'Review the topics you missed and try again.'} :
+    {emoji:'💪', title:'Keep Practicing!', desc:'This is a tough area. Check the AI Tutor for help.'};
+  document.getElementById('result-emoji').textContent = grade.emoji;
+  document.getElementById('result-title').textContent = grade.title;
+  document.getElementById('result-desc').textContent = grade.desc;
+  document.getElementById('result-breakdown').innerHTML = `
+    <div class="card" style="background:rgba(255,255,255,.03)">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;text-align:center">
+        <div><div style="font-size:1.5rem;font-weight:800;color:#10b981">${correct}</div><div style="font-size:12px;color:#64748b">Correct</div></div>
+        <div><div style="font-size:1.5rem;font-weight:800;color:#ef4444">${total-correct}</div><div style="font-size:12px;color:#64748b">Wrong</div></div>
+        <div><div style="font-size:1.5rem;font-weight:800;color:#6366f1">${pct}%</div><div style="font-size:12px;color:#64748b">Score</div></div>
+      </div>
+    </div>`;
+}
+
+function retakeQuiz() {
+  document.getElementById('view-results').style.display = 'none';
+  document.getElementById('view-select').style.display = 'block';
+}
+</script>
+</body>
+</html>
